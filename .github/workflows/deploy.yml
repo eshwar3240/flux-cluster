@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  IMAGE_NAME: eshwar0519/flux-cluster
+  IMAGE_NAME: eshwar0117/flux-cluster
 
 jobs:
   build:
