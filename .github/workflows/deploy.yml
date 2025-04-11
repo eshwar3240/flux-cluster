@@ -3,9 +3,7 @@ name: Build and Push Docker Image on Tag
 on:
   push:
     tags:
-      - '*'         # Triggers on all tags (v1.0.0, 1.1.0, etc.)
-    branches:
-      - main        # Optional: makes sure it's only for tags on main branch
+      - '*'   # Runs when a new Git tag is pushed
 
 env:
   IMAGE_NAME: eshwar0519/flux-cluster
@@ -17,24 +15,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Docker
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to DockerHub
+      - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Extract tag name
+      - name: Get tag name
+        id: get_tag
         run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
       - name: Build and tag Docker image
         run: |
-          docker build -t $IMAGE_NAME:latest .
-          docker tag $IMAGE_NAME:latest $IMAGE_NAME:$TAG_NAME
+          docker build -t $IMAGE_NAME:$TAG_NAME .
 
       - name: Push Docker image
         run: |
-          docker push $IMAGE_NAME:latest
           docker push $IMAGE_NAME:$TAG_NAME
