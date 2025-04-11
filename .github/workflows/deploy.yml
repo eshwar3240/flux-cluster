@@ -1,15 +1,17 @@
-name: Build and Deploy to Kind with Flux
+name: Build and Push Docker Image on Tag
 
 on:
   push:
+    tags:
+      - '*'         # Triggers on all tags (v1.0.0, 1.1.0, etc.)
     branches:
-      - main
+      - main        # Optional: makes sure it's only for tags on main branch
 
 env:
-  IMAGE_NAME: eshwar0117/flux-cluster:1.0.0
+  IMAGE_NAME: eshwar0519/flux-cluster
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -18,20 +20,21 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to DockerHub
+      - name: Log in to DockerHub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Extract tag name
+        run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
       - name: Build and tag Docker image
         run: |
           docker build -t $IMAGE_NAME:latest .
-          docker tag $IMAGE_NAME:latest $IMAGE_NAME:${{ github.sha }}
+          docker tag $IMAGE_NAME:latest $IMAGE_NAME:$TAG_NAME
 
       - name: Push Docker image
         run: |
           docker push $IMAGE_NAME:latest
-          docker push $IMAGE_NAME:${{ github.sha }}
-
-
+          docker push $IMAGE_NAME:$TAG_NAME
